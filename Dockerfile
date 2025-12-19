@@ -18,9 +18,8 @@ COPY . .
 EXPOSE 8501
 
 # Health check
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:${PORT:-8501}/_stcore/health || exit 1
 
-# Run Streamlit
-# Use PORT environment variable if available (Railway), otherwise default to 8501
-CMD streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true
-
+# Run Streamlit - Railway sets PORT automatically
+# Use sh -c to ensure shell expansion of PORT variable
+CMD sh -c "streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true"
