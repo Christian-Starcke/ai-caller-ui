@@ -122,24 +122,83 @@ if page == "Dashboard":
             st.subheader("Campaign Performance")
             campaign_data = stats_data["campaignBreakdown"]
             if campaign_data:
-                df_campaigns = pd.DataFrame(campaign_data)
-                # Remove technical IDs from display if present
-                if "campaign_id" in df_campaigns.columns:
-                    df_campaigns = df_campaigns.drop(columns=["campaign_id"])
-                st.dataframe(df_campaigns, use_container_width=True)
+                # Transform data for better UX - format column names and reorder
+                formatted_campaigns = []
+                for campaign in campaign_data:
+                    formatted_campaign = {}
+                    # Use campaign_name first, format other fields
+                    if "campaign_name" in campaign:
+                        formatted_campaign["Campaign"] = campaign.get("campaign_name", "")
+                    if "totalCalls" in campaign or "total_calls" in campaign:
+                        formatted_campaign["Total Calls"] = campaign.get("totalCalls") or campaign.get("total_calls", 0)
+                    if "connections" in campaign:
+                        formatted_campaign["Connections"] = campaign.get("connections", 0)
+                    if "conversations" in campaign:
+                        formatted_campaign["Conversations"] = campaign.get("conversations", 0)
+                    if "answerRate" in campaign or "answer_rate" in campaign:
+                        rate = campaign.get("answerRate") or campaign.get("answer_rate", 0)
+                        formatted_campaign["Answer Rate"] = f"{rate:.1f}%" if isinstance(rate, (int, float)) else rate
+                    if "totalCost" in campaign or "total_cost" in campaign:
+                        cost = campaign.get("totalCost") or campaign.get("total_cost", 0)
+                        formatted_campaign["Total Cost"] = f"${cost:.2f}" if isinstance(cost, (int, float)) else cost
+                    formatted_campaigns.append(formatted_campaign)
+                
+                if formatted_campaigns:
+                    df_campaigns = pd.DataFrame(formatted_campaigns)
+                    st.dataframe(df_campaigns, use_container_width=True)
         
         # Recent Calls
         if stats_data.get("recentCalls"):
             st.subheader("Recent Calls")
             recent_calls = stats_data["recentCalls"]
             if recent_calls:
-                df_recent = pd.DataFrame(recent_calls)
-                # Remove technical IDs from display
-                columns_to_remove = ["call_id", "lead_id"]
-                for col in columns_to_remove:
-                    if col in df_recent.columns:
-                        df_recent = df_recent.drop(columns=[col])
-                st.dataframe(df_recent, use_container_width=True)
+                # Transform data for better UX - format column names, dates, and values
+                formatted_calls = []
+                for call in recent_calls:
+                    formatted_call = {}
+                    
+                    # Format date
+                    call_date = call.get("call_date") or call.get("callDate") or ""
+                    if call_date:
+                        try:
+                            dt = datetime.fromisoformat(str(call_date).replace('Z', '+00:00'))
+                            formatted_call["Date"] = dt.strftime("%Y-%m-%d %H:%M")
+                        except:
+                            formatted_call["Date"] = str(call_date)
+                    else:
+                        formatted_call["Date"] = ""
+                    
+                    # Format duration
+                    duration = call.get("duration", 0)
+                    if isinstance(duration, (int, float)):
+                        if duration < 60:
+                            formatted_call["Duration"] = f"{int(duration)}s"
+                        else:
+                            minutes = int(duration // 60)
+                            seconds = int(duration % 60)
+                            formatted_call["Duration"] = f"{minutes}m {seconds}s"
+                    else:
+                        formatted_call["Duration"] = str(duration)
+                    
+                    # Format disposition
+                    formatted_call["Status"] = call.get("disposition", "") or "Unknown"
+                    
+                    # Format answered
+                    answered = call.get("answered") or call.get("isAnswered", False)
+                    formatted_call["Answered"] = "✅ Yes" if answered else "❌ No"
+                    
+                    # Format cost
+                    cost = call.get("cost") or call.get("callCost", 0)
+                    if isinstance(cost, (int, float)):
+                        formatted_call["Cost"] = f"${cost:.2f}"
+                    else:
+                        formatted_call["Cost"] = str(cost)
+                    
+                    formatted_calls.append(formatted_call)
+                
+                if formatted_calls:
+                    df_recent = pd.DataFrame(formatted_calls)
+                    st.dataframe(df_recent, use_container_width=True)
         
         # Daily Recap Section
         st.markdown("---")
