@@ -123,6 +123,9 @@ if page == "Dashboard":
             campaign_data = stats_data["campaignBreakdown"]
             if campaign_data:
                 df_campaigns = pd.DataFrame(campaign_data)
+                # Remove technical IDs from display if present
+                if "campaign_id" in df_campaigns.columns:
+                    df_campaigns = df_campaigns.drop(columns=["campaign_id"])
                 st.dataframe(df_campaigns, use_container_width=True)
         
         # Recent Calls
@@ -131,6 +134,11 @@ if page == "Dashboard":
             recent_calls = stats_data["recentCalls"]
             if recent_calls:
                 df_recent = pd.DataFrame(recent_calls)
+                # Remove technical IDs from display
+                columns_to_remove = ["call_id", "lead_id"]
+                for col in columns_to_remove:
+                    if col in df_recent.columns:
+                        df_recent = df_recent.drop(columns=[col])
                 st.dataframe(df_recent, use_container_width=True)
         
         # Daily Recap Section
@@ -215,11 +223,10 @@ elif page == "Leads":
             st.subheader(f"Leads List ({pagination.get('total', 0)} total)")
             
             if leads:
-                # Prepare data for display
+                # Prepare data for display (removed technical IDs for better UX)
                 display_data = []
                 for lead in leads:
                     display_data.append({
-                        "Lead ID": lead.get("lead_id", ""),
                         "Name": f"{lead.get('first_name', '')} {lead.get('last_name', '')}".strip(),
                         "Email": lead.get("email", ""),
                         "Phone": lead.get("mobile_phone", ""),
@@ -250,7 +257,8 @@ elif page == "Leads":
                 # Action buttons for selected lead
                 st.markdown("---")
                 st.subheader("Actions")
-                selected_lead_id = st.text_input("Enter Lead ID to perform actions", placeholder="Lead ID", key="selected_lead")
+                st.caption("💡 Tip: Search for a lead by name, email, or phone above, then use the actions below")
+                selected_lead_id = st.text_input("Enter Lead ID to perform actions", placeholder="Enter Lead ID (found in exported data)", key="selected_lead", help="Lead IDs are hidden from the main table for cleaner UX. You can find them by exporting the data or checking the API response.")
                 
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -492,8 +500,6 @@ elif page == "Calls":
                         pass
                 
                 display_data.append({
-                    "Call ID": call.get("call_id", ""),
-                    "Lead ID": call.get("lead_id", ""),
                     "Date": call_date,
                     "Duration": f"{call.get('duration', 0)}s",
                     "Disposition": call.get("disposition", ""),
@@ -553,7 +559,6 @@ elif page == "Campaigns":
             with st.expander(f"📋 {campaign.get('campaign_name', 'Unnamed Campaign')}"):
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.write(f"**Campaign ID:** {campaign.get('campaign_id', 'N/A')}")
                     st.write(f"**Sequence Template:** {campaign.get('sequence_template', 'N/A')}")
                     st.write(f"**Max Calls:** {campaign.get('max_calls', 'N/A')}")
                     st.write(f"**Duration (Weeks):** {campaign.get('duration_weeks', 'N/A')}")
