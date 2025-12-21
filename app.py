@@ -467,16 +467,8 @@ elif page == "Calls":
     if call_status != "All":
         params["disposition"] = call_status
     
-    # Debug: Show current page being requested (temporarily enabled)
-    st.write(f"🔍 DEBUG: Fetching page {st.session_state.calls_page}, params: {params}")
-    
     with st.spinner("Loading calls..."):
         calls_data, error = api_call("api/calls", params=params)
-    
-    # Debug: Show API response info
-    if calls_data:
-        calls_list = calls_data.get("calls", [])
-        st.write(f"🔍 DEBUG: Received {len(calls_list)} calls. First Call ID: {calls_list[0].get('call_id') if calls_list else 'N/A'}")
     
     if error:
         st.error(f"Error loading calls: {error}")
