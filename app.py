@@ -430,22 +430,30 @@ elif page == "Calls":
     # Initialize page number in session state if not exists
     if "calls_page" not in st.session_state:
         st.session_state.calls_page = 1
+    if "prev_call_date_from" not in st.session_state:
+        st.session_state.prev_call_date_from = None
+    if "prev_call_date_to" not in st.session_state:
+        st.session_state.prev_call_date_to = None
+    if "prev_call_status" not in st.session_state:
+        st.session_state.prev_call_status = "All"
     
     # Filters
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        date_from = st.date_input("From Date", value=datetime.now() - timedelta(days=7), key="calls_from")
+        date_from = st.date_input("From Date", value=datetime.now().date() - timedelta(days=7), key="calls_from")
     with col2:
-        date_to = st.date_input("To Date", value=datetime.now(), key="calls_to")
+        date_to = st.date_input("To Date", value=datetime.now().date(), key="calls_to")
     with col3:
         call_status = st.selectbox("Disposition", ["All", "Answered", "No Answer", "Busy", "Interested", "Not Interested"], key="call_disposition")
-    with col4:
-        # Use session state value but different key for widget
-        page_input = st.number_input("Page", min_value=1, value=st.session_state.calls_page, step=1, key="calls_page_input")
-        # Sync session state if user manually changed the input
-        if page_input != st.session_state.calls_page:
-            st.session_state.calls_page = page_input
-            st.rerun()
+    
+    # Reset to page 1 if filters changed
+    if (date_from != st.session_state.prev_call_date_from or 
+        date_to != st.session_state.prev_call_date_to or 
+        call_status != st.session_state.prev_call_status):
+        st.session_state.calls_page = 1
+        st.session_state.prev_call_date_from = date_from
+        st.session_state.prev_call_date_to = date_to
+        st.session_state.prev_call_status = call_status
     
     st.markdown("---")
     
@@ -504,7 +512,7 @@ elif page == "Calls":
                         st.session_state.calls_page = st.session_state.calls_page + 1
                         st.rerun()
             with col2:
-                st.caption(f"Page {pagination.get('page', 1)} of {pagination.get('totalPages', 1)}")
+                st.caption(f"Page {st.session_state.calls_page} of {pagination.get('totalPages', 1)}")
             with col3:
                 if st.session_state.calls_page > 1:
                     if st.button("Previous Page", key="calls_prev"):
