@@ -117,7 +117,7 @@ if page == "Dashboard":
             campaign_data = stats_data["campaignBreakdown"]
             if campaign_data:
                 df_campaigns = pd.DataFrame(campaign_data)
-                st.dataframe(df_campaigns, use_container_width=True)
+                st.dataframe(df_campaigns, width=True)
         
         # Recent Calls
         if stats_data.get("recentCalls"):
@@ -125,7 +125,7 @@ if page == "Dashboard":
             recent_calls = stats_data["recentCalls"]
             if recent_calls:
                 df_recent = pd.DataFrame(recent_calls)
-                st.dataframe(df_recent, use_container_width=True)
+                st.dataframe(df_recent, width=True)
         
         # Daily Recap Section
         st.markdown("---")
@@ -212,7 +212,7 @@ elif page == "Leads":
                     })
                 
                 df = pd.DataFrame(display_data)
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, width=True)
                 
                 # Pagination info
                 col1, col2, col3 = st.columns([1, 1, 1])
@@ -236,7 +236,7 @@ elif page == "Leads":
                 
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    if st.button("📞 Trigger Call", use_container_width=True, key="trigger_call"):
+                    if st.button("📞 Trigger Call", width=True, key="trigger_call"):
                         if selected_lead_id:
                             with st.spinner("Triggering call..."):
                                 result, error = api_call("api/trigger-call", method="POST", json_data={"lead_id": selected_lead_id})
@@ -249,7 +249,7 @@ elif page == "Leads":
                 
                 with col2:
                     new_status = st.selectbox("Update Status", ["New", "Calling", "Completed", "DNC"], key="update_status")
-                    if st.button("💾 Update Lead", use_container_width=True, key="update_lead"):
+                    if st.button("💾 Update Lead", width=True, key="update_lead"):
                         if selected_lead_id:
                             with st.spinner("Updating lead..."):
                                 result, error = api_call("api/leads", method="POST", json_data={"lead_id": selected_lead_id, "status": new_status})
@@ -262,7 +262,7 @@ elif page == "Leads":
                             st.warning("Please enter a Lead ID")
                 
                 with col3:
-                    if st.button("🗑️ Delete Lead", use_container_width=True, key="delete_lead"):
+                    if st.button("🗑️ Delete Lead", width=True, key="delete_lead"):
                         if selected_lead_id:
                             with st.spinner("Deleting lead..."):
                                 result, error = api_call("api/delete-lead", method="POST", json_data={"lead_id": selected_lead_id})
@@ -298,7 +298,7 @@ elif page == "Leads":
                 notes = st.text_area("Notes", key="create_notes")
                 campaign_name = st.text_input("Campaign Name (optional)", key="create_campaign")
             
-            submitted = st.form_submit_button("Create Lead", use_container_width=True)
+            submitted = st.form_submit_button("Create Lead", width=True)
             
             if submitted:
                 if not all([first_name, last_name, email, mobile_phone, company]):
@@ -369,7 +369,7 @@ elif page == "Leads":
                     campaign_name = st.text_input("Campaign Name (optional)", key="csv_campaign")
                     skip_duplicates = st.checkbox("Skip Duplicates", value=True, key="skip_duplicates")
                     
-                    submitted = st.form_submit_button("Upload CSV", use_container_width=True)
+                    submitted = st.form_submit_button("Upload CSV", width=True)
                     
                     if submitted:
                         # Build mapping (remove "None" values)
@@ -467,7 +467,7 @@ elif page == "Calls":
                 })
             
             df = pd.DataFrame(display_data)
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(df, width=True)
             
             # Pagination
             col1, col2, col3 = st.columns([1, 1, 1])
