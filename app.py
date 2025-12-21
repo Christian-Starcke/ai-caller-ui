@@ -454,7 +454,6 @@ elif page == "Calls":
         st.session_state.prev_calls_from = date_from
         st.session_state.prev_calls_to = date_to
         st.session_state.prev_call_disposition = call_status
-        st.rerun()
     
     st.markdown("---")
     
