@@ -92,21 +92,33 @@ if page == "Dashboard":
     if error:
         st.error(f"Error loading stats: {error}")
     elif stats_data:
+        # Temporary debug section - remove after fixing
+        with st.expander("🔍 Debug: View Raw API Response", expanded=False):
+            st.json(stats_data)
+            st.caption("Check the field names in the response above")
+        
         # Stats Section
         st.subheader("Statistics")
         col1, col2, col3, col4 = st.columns(4)
         
+        # Extract stats - handle both snake_case and camelCase, and nested structures
+        # The stats-v2 endpoint spreads overview fields directly into response
+        total_leads = stats_data.get("total_leads") or stats_data.get("totalLeads") or 0
+        active_leads = stats_data.get("active_leads") or stats_data.get("activeLeads") or 0
+        total_calls = stats_data.get("total_calls") or stats_data.get("totalCalls") or 0
+        answer_rate = stats_data.get("answer_rate") or stats_data.get("answerRate") or 0
+        
+        # Convert answer_rate to percentage if it's a decimal (0.5 -> 50%)
+        if answer_rate and answer_rate < 1:
+            answer_rate = answer_rate * 100
+        
         with col1:
-            total_leads = stats_data.get("total_leads", 0)
             st.metric("Total Leads", f"{total_leads:,}")
         with col2:
-            active_leads = stats_data.get("active_leads", 0)
             st.metric("Active Leads", f"{active_leads:,}")
         with col3:
-            total_calls = stats_data.get("total_calls", 0)
             st.metric("Total Calls", f"{total_calls:,}")
         with col4:
-            answer_rate = stats_data.get("answer_rate", 0)
             st.metric("Answer Rate", f"{answer_rate:.1f}%")
         
         st.markdown("---")
