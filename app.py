@@ -157,6 +157,33 @@ if page == "Dashboard":
                 for call in recent_calls:
                     formatted_call = {}
                     
+                    # Add lead information if available
+                    # Check if lead info is nested or flat
+                    lead_info = call.get("lead") or {}
+                    if not lead_info and (call.get("first_name") or call.get("lead_first_name")):
+                        # Lead info might be at top level
+                        lead_info = {
+                            "first_name": call.get("first_name") or call.get("lead_first_name", ""),
+                            "last_name": call.get("last_name") or call.get("lead_last_name", ""),
+                            "company": call.get("company") or call.get("lead_company", ""),
+                            "email": call.get("email") or call.get("lead_email", ""),
+                            "mobile_phone": call.get("mobile_phone") or call.get("lead_phone", "")
+                        }
+                    
+                    # Add lead name
+                    if lead_info:
+                        first_name = lead_info.get("first_name", "")
+                        last_name = lead_info.get("last_name", "")
+                        name = f"{first_name} {last_name}".strip()
+                        formatted_call["Name"] = name if name else "Unknown"
+                        
+                        # Add company if available
+                        company = lead_info.get("company", "")
+                        formatted_call["Company"] = company if company else "-"
+                    else:
+                        formatted_call["Name"] = "-"
+                        formatted_call["Company"] = "-"
+                    
                     # Format date
                     call_date = call.get("call_date") or call.get("callDate") or ""
                     if call_date:
