@@ -92,32 +92,26 @@ if page == "Dashboard":
     if error:
         st.error(f"Error loading stats: {error}")
     elif stats_data:
-        # Temporary debug section - remove after fixing
-        with st.expander("🔍 Debug: View Raw API Response", expanded=False):
-            st.json(stats_data)
-            st.caption("Check the field names in the response above")
         
         # Stats Section
         st.subheader("Statistics")
         col1, col2, col3, col4 = st.columns(4)
         
-        # Extract stats - handle both snake_case and camelCase, and nested structures
-        # The stats-v2 endpoint spreads overview fields directly into response
-        total_leads = stats_data.get("total_leads") or stats_data.get("totalLeads") or 0
-        active_leads = stats_data.get("active_leads") or stats_data.get("activeLeads") or 0
-        total_calls = stats_data.get("total_calls") or stats_data.get("totalCalls") or 0
-        answer_rate = stats_data.get("answer_rate") or stats_data.get("answerRate") or 0
+        # Extract stats from actual API response structure
+        total_calls = stats_data.get("totalCalls", 0)
+        connections = stats_data.get("connections", 0)
+        conversations = stats_data.get("conversations", 0)
+        total_cost = stats_data.get("totalCost", 0)
         
-        # Convert answer_rate to percentage if it's a decimal (0.5 -> 50%)
-        if answer_rate and answer_rate < 1:
-            answer_rate = answer_rate * 100
+        # Calculate answer rate as connections/totalCalls (as percentage)
+        answer_rate = (connections / total_calls * 100) if total_calls > 0 else 0
         
         with col1:
-            st.metric("Total Leads", f"{total_leads:,}")
-        with col2:
-            st.metric("Active Leads", f"{active_leads:,}")
-        with col3:
             st.metric("Total Calls", f"{total_calls:,}")
+        with col2:
+            st.metric("Connections", f"{connections:,}")
+        with col3:
+            st.metric("Conversations", f"{conversations:,}")
         with col4:
             st.metric("Answer Rate", f"{answer_rate:.1f}%")
         
