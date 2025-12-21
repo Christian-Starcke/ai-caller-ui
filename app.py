@@ -170,6 +170,10 @@ elif page == "Leads":
     
     # Tab 1: View Leads
     with tab1:
+        # Initialize page number in session state if not exists
+        if "leads_page" not in st.session_state:
+            st.session_state.leads_page = 1
+        
         # Search and filter
         col1, col2, col3 = st.columns([3, 1, 1])
         with col1:
@@ -177,13 +181,18 @@ elif page == "Leads":
         with col2:
             status_filter = st.selectbox("Status", ["All", "New", "Calling", "Completed", "DNC", "Pending"], key="status_filter")
         with col3:
-            page_num = st.number_input("Page", min_value=1, value=1, step=1, key="leads_page")
+            # Use session state value but different key for widget
+            page_input = st.number_input("Page", min_value=1, value=st.session_state.leads_page, step=1, key="leads_page_input")
+            # Sync session state if user manually changed the input
+            if page_input != st.session_state.leads_page:
+                st.session_state.leads_page = page_input
+                st.rerun()
         
         st.markdown("---")
         
         # Fetch leads
         params = {
-            "page": page_num,
+            "page": st.session_state.leads_page,
             "limit": 50
         }
         if search_term:
@@ -225,14 +234,14 @@ elif page == "Leads":
                 with col1:
                     if pagination.get("hasMore"):
                         if st.button("Next Page", key="next_page"):
-                            st.session_state.leads_page = page_num + 1
+                            st.session_state.leads_page = st.session_state.leads_page + 1
                             st.rerun()
                 with col2:
                     st.caption(f"Page {pagination.get('page', 1)} of {pagination.get('totalPages', 1)}")
                 with col3:
-                    if page_num > 1:
+                    if st.session_state.leads_page > 1:
                         if st.button("Previous Page", key="prev_page"):
-                            st.session_state.leads_page = page_num - 1
+                            st.session_state.leads_page = st.session_state.leads_page - 1
                             st.rerun()
                 
                 # Action buttons for selected lead
@@ -415,6 +424,10 @@ elif page == "Leads":
 elif page == "Calls":
     st.header("📞 Call History")
     
+    # Initialize page number in session state if not exists
+    if "calls_page" not in st.session_state:
+        st.session_state.calls_page = 1
+    
     # Filters
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -424,7 +437,12 @@ elif page == "Calls":
     with col3:
         call_status = st.selectbox("Disposition", ["All", "Answered", "No Answer", "Busy", "Interested", "Not Interested"], key="call_disposition")
     with col4:
-        page_num = st.number_input("Page", min_value=1, value=1, step=1, key="calls_page")
+        # Use session state value but different key for widget
+        page_input = st.number_input("Page", min_value=1, value=st.session_state.calls_page, step=1, key="calls_page_input")
+        # Sync session state if user manually changed the input
+        if page_input != st.session_state.calls_page:
+            st.session_state.calls_page = page_input
+            st.rerun()
     
     st.markdown("---")
     
@@ -432,7 +450,7 @@ elif page == "Calls":
     params = {
         "dateFrom": date_from.isoformat(),
         "dateTo": date_to.isoformat(),
-        "page": page_num,
+        "page": st.session_state.calls_page,
         "limit": 50
     }
     if call_status != "All":
@@ -480,14 +498,14 @@ elif page == "Calls":
             with col1:
                 if pagination.get("hasMore"):
                     if st.button("Next Page", key="calls_next"):
-                        st.session_state.calls_page = page_num + 1
+                        st.session_state.calls_page = st.session_state.calls_page + 1
                         st.rerun()
             with col2:
                 st.caption(f"Page {pagination.get('page', 1)} of {pagination.get('totalPages', 1)}")
             with col3:
-                if page_num > 1:
+                if st.session_state.calls_page > 1:
                     if st.button("Previous Page", key="calls_prev"):
-                        st.session_state.calls_page = page_num - 1
+                        st.session_state.calls_page = st.session_state.calls_page - 1
                         st.rerun()
         else:
             st.info("No calls found for the selected filters")
