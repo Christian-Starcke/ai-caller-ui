@@ -173,20 +173,23 @@ elif page == "Leads":
         # Initialize page number in session state if not exists
         if "leads_page" not in st.session_state:
             st.session_state.leads_page = 1
+        if "prev_search" not in st.session_state:
+            st.session_state.prev_search = ""
+        if "prev_status" not in st.session_state:
+            st.session_state.prev_status = "All"
         
         # Search and filter
-        col1, col2, col3 = st.columns([3, 1, 1])
+        col1, col2 = st.columns([3, 1])
         with col1:
             search_term = st.text_input("🔍 Search leads", placeholder="Enter name, phone, or email...", key="search_leads")
         with col2:
             status_filter = st.selectbox("Status", ["All", "New", "Calling", "Completed", "DNC", "Pending"], key="status_filter")
-        with col3:
-            # Use session state value but different key for widget
-            page_input = st.number_input("Page", min_value=1, value=st.session_state.leads_page, step=1, key="leads_page_input")
-            # Sync session state if user manually changed the input
-            if page_input != st.session_state.leads_page:
-                st.session_state.leads_page = page_input
-                st.rerun()
+        
+        # Reset to page 1 if search or filter changed
+        if search_term != st.session_state.prev_search or status_filter != st.session_state.prev_status:
+            st.session_state.leads_page = 1
+            st.session_state.prev_search = search_term
+            st.session_state.prev_status = status_filter
         
         st.markdown("---")
         
@@ -237,7 +240,7 @@ elif page == "Leads":
                             st.session_state.leads_page = st.session_state.leads_page + 1
                             st.rerun()
                 with col2:
-                    st.caption(f"Page {pagination.get('page', 1)} of {pagination.get('totalPages', 1)}")
+                    st.caption(f"Page {st.session_state.leads_page} of {pagination.get('totalPages', 1)}")
                 with col3:
                     if st.session_state.leads_page > 1:
                         if st.button("Previous Page", key="prev_page"):
