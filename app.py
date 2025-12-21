@@ -467,6 +467,9 @@ elif page == "Calls":
     if call_status != "All":
         params["disposition"] = call_status
     
+    # Debug: Show current page being requested (temporarily enabled)
+    st.write(f"🔍 DEBUG: Fetching page {st.session_state.calls_page}, params: {params}")
+    
     with st.spinner("Loading calls..."):
         calls_data, error = api_call("api/calls", params=params)
     
