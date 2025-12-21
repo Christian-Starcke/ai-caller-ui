@@ -430,12 +430,12 @@ elif page == "Calls":
     # Initialize page number in session state if not exists
     if "calls_page" not in st.session_state:
         st.session_state.calls_page = 1
-    if "prev_call_date_from" not in st.session_state:
-        st.session_state.prev_call_date_from = None
-    if "prev_call_date_to" not in st.session_state:
-        st.session_state.prev_call_date_to = None
-    if "prev_call_status" not in st.session_state:
-        st.session_state.prev_call_status = "All"
+    if "prev_calls_from" not in st.session_state:
+        st.session_state.prev_calls_from = None
+    if "prev_calls_to" not in st.session_state:
+        st.session_state.prev_calls_to = None
+    if "prev_call_disposition" not in st.session_state:
+        st.session_state.prev_call_disposition = "All"
     
     # Filters
     col1, col2, col3 = st.columns(3)
@@ -446,14 +446,15 @@ elif page == "Calls":
     with col3:
         call_status = st.selectbox("Disposition", ["All", "Answered", "No Answer", "Busy", "Interested", "Not Interested"], key="call_disposition")
     
-    # Reset to page 1 if filters changed
-    if (date_from != st.session_state.prev_call_date_from or 
-        date_to != st.session_state.prev_call_date_to or 
-        call_status != st.session_state.prev_call_status):
+    # Reset page to 1 if filters change
+    if st.session_state.get("prev_calls_from") != date_from or \
+       st.session_state.get("prev_calls_to") != date_to or \
+       st.session_state.get("prev_call_disposition", "All") != call_status:
         st.session_state.calls_page = 1
-        st.session_state.prev_call_date_from = date_from
-        st.session_state.prev_call_date_to = date_to
-        st.session_state.prev_call_status = call_status
+        st.session_state.prev_calls_from = date_from
+        st.session_state.prev_calls_to = date_to
+        st.session_state.prev_call_disposition = call_status
+        st.rerun()
     
     st.markdown("---")
     
