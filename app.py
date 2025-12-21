@@ -343,8 +343,45 @@ elif page == "Leads":
                 # Action buttons for selected lead
                 st.markdown("---")
                 st.subheader("Actions")
-                st.caption("💡 Tip: Search for a lead by name, email, or phone above, then use the actions below")
-                selected_lead_id = st.text_input("Enter Lead ID to perform actions", placeholder="Enter Lead ID (found in exported data)", key="selected_lead", help="Lead IDs are hidden from the main table for cleaner UX. You can find them by exporting the data or checking the API response.")
+                st.caption("💡 Select a lead from the list above, then choose an action below")
+                
+                # Create a user-friendly lead selector
+                lead_options = ["-- Select a Lead --"] + [
+                    f"{lead.get('first_name', '')} {lead.get('last_name', '')} ({lead.get('email', 'No email')})".strip()
+                    for lead in leads
+                ]
+                lead_ids_map = {}
+                for lead in leads:
+                    display_name = f"{lead.get('first_name', '')} {lead.get('last_name', '')} ({lead.get('email', 'No email')})".strip()
+                    lead_ids_map[display_name] = lead.get("lead_id", "")
+                
+                selected_lead_display = st.selectbox(
+                    "Select Lead",
+                    lead_options,
+                    key="selected_lead_display",
+                    help="Choose a lead from the list above to perform actions"
+                )
+                
+                # Extract lead_id from selection
+                selected_lead_id = None
+                if selected_lead_display and selected_lead_display != "-- Select a Lead --":
+                    selected_lead_id = lead_ids_map.get(selected_lead_display)
+                
+                # Show selected lead info if one is selected
+                if selected_lead_id:
+                    selected_lead = next((l for l in leads if l.get("lead_id") == selected_lead_id), None)
+                    if selected_lead:
+                        with st.expander(f"📋 Lead Details: {selected_lead_display}", expanded=False):
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.write(f"**Email:** {selected_lead.get('email', 'N/A')}")
+                                st.write(f"**Phone:** {selected_lead.get('mobile_phone', 'N/A')}")
+                                st.write(f"**Company:** {selected_lead.get('company', 'N/A')}")
+                            with col2:
+                                st.write(f"**Status:** {selected_lead.get('status', 'N/A')}")
+                                st.write(f"**Calls Made:** {selected_lead.get('call_count', 0)}")
+                                campaign_name = selected_lead.get("campaign", {}).get("campaign_name", "") if selected_lead.get("campaign") else "None"
+                                st.write(f"**Campaign:** {campaign_name}")
                 
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -357,7 +394,7 @@ elif page == "Leads":
                             elif result:
                                 st.success(f"Call initiated! Call ID: {result.get('call_id', 'N/A')}")
                         else:
-                            st.warning("Please enter a Lead ID")
+                            st.warning("Please select a lead first")
                 
                 with col2:
                     new_status = st.selectbox("Update Status", ["New", "Calling", "Completed", "DNC"], key="update_status")
@@ -371,20 +408,34 @@ elif page == "Leads":
                                 st.success("Lead updated successfully!")
                                 st.rerun()
                         else:
-                            st.warning("Please enter a Lead ID")
+                            st.warning("Please select a lead first")
                 
                 with col3:
                     if st.button("🗑️ Delete Lead", use_container_width=True, key="delete_lead"):
                         if selected_lead_id:
-                            with st.spinner("Deleting lead..."):
-                                result, error = api_call("api/delete-lead", method="POST", json_data={"lead_id": selected_lead_id})
-                            if error:
-                                st.error(f"Error: {error}")
-                            elif result:
-                                st.success("Lead deleted successfully!")
-                                st.rerun()
+                            # Add confirmation for delete
+                            if "confirm_delete" not in st.session_state:
+                                st.session_state.confirm_delete = False
+                            
+                            if not st.session_state.confirm_delete:
+                                st.warning("⚠️ Click Delete Lead again to confirm deletion")
+                                st.session_state.confirm_delete = True
+                            else:
+                                with st.spinner("Deleting lead..."):
+                                    result, error = api_call("api/delete-lead", method="POST", json_data={"lead_id": selected_lead_id})
+                                if error:
+                                    st.error(f"Error: {error}")
+                                    st.session_state.confirm_delete = False
+                                elif result:
+                                    st.success("Lead deleted successfully!")
+                                    st.session_state.confirm_delete = False
+                                    st.rerun()
                         else:
-                            st.warning("Please enter a Lead ID")
+                            st.warning("Please select a lead first")
+                    else:
+                        # Reset confirmation if button not clicked
+                        if "confirm_delete" in st.session_state:
+                            st.session_state.confirm_delete = False
             else:
                 st.info("No leads found")
         else:
